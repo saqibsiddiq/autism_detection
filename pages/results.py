@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
+from database.models import db_manager
 
 def show_results_page():
     st.header("📊 Assessment Results")
@@ -40,11 +41,27 @@ def show_results_page():
     # Process data and generate ML prediction
     ml_results = generate_ml_prediction(questionnaire_data, gaze_data)
     
-    # Store results for comprehensive report
+    # Save results to database and create comprehensive report
     if 'comprehensive_results' not in st.session_state:
-        st.session_state.comprehensive_results = create_comprehensive_report(
+        comprehensive_report = create_comprehensive_report(
             questionnaire_data, gaze_data, ml_results
         )
+        st.session_state.comprehensive_results = comprehensive_report
+        
+        # Save to database
+        try:
+            if st.session_state.assessment_id:
+                db_manager.save_assessment_results(
+                    st.session_state.assessment_id,
+                    questionnaire_data,
+                    gaze_data.get('overall_metrics', {}) if gaze_data else {},
+                    ml_results,
+                    comprehensive_report.get('risk_assessment', {}),
+                    comprehensive_report.get('recommendations', [])
+                )
+                db_manager.complete_assessment(st.session_state.assessment_id)
+        except Exception as e:
+            st.error(f"Error saving results to database: {e}")
     
     # Create tabs for different result views
     tabs = st.tabs(["🎯 Summary", "📋 Questionnaire", "👁️ Gaze Analysis", "🤖 ML Insights", "📄 Report"])

@@ -8,7 +8,9 @@ import cv2
 import mediapipe as mp
 import json
 import os
+import uuid
 from datetime import datetime
+from database.models import db_manager
 
 # Page configuration
 st.set_page_config(
@@ -18,7 +20,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize session state
+# Initialize database
+try:
+    db_manager.create_tables()
+except Exception as e:
+    st.error(f"Database initialization error: {e}")
+
+# Initialize session state and database user
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+
+if 'user_id' not in st.session_state:
+    # Try to get existing user or create new one
+    user = db_manager.get_user_by_session(st.session_state.session_id)
+    if not user:
+        user = db_manager.create_user(st.session_state.session_id)
+    st.session_state.user_id = user.id
+
+if 'assessment_id' not in st.session_state:
+    st.session_state.assessment_id = None
 if 'assessment_data' not in st.session_state:
     st.session_state.assessment_data = {}
 if 'gaze_data' not in st.session_state:
@@ -62,6 +82,12 @@ def main():
     steps = ["Overview", "Questionnaire", "Gaze Assessment", "Results", "Educational Resources"]
     current_step = st.sidebar.selectbox("Assessment Steps", steps, index=st.session_state.current_step)
     
+    # Admin access
+    if st.sidebar.checkbox("Admin Dashboard"):
+        from pages.admin_dashboard import show_admin_dashboard
+        show_admin_dashboard()
+        return
+    
     # Update current step
     st.session_state.current_step = steps.index(current_step)
     
@@ -70,13 +96,26 @@ def main():
     st.sidebar.progress(progress)
     st.sidebar.write(f"Progress: {int(progress * 100)}%")
     
+    # Database statistics
+    if st.sidebar.checkbox("Show Statistics"):
+        try:
+            stats = db_manager.get_assessment_statistics()
+            st.sidebar.metric("Total Users", stats.get("total_users", 0))
+            st.sidebar.metric("Completed Assessments", stats.get("completed_assessments", 0))
+            if stats.get("completion_rate"):
+                st.sidebar.metric("Completion Rate", f"{stats['completion_rate']:.1%}")
+        except Exception as e:
+            st.sidebar.error("Could not load statistics")
+    
     # Clear data option
-    if st.sidebar.button("🗑️ Clear All Data"):
+    if st.sidebar.button("🗑️ Clear Session Data"):
+        # Clear session state but keep user in database
         for key in list(st.session_state.keys()):
-            if key not in ['current_step']:
+            if key not in ['current_step', 'session_id', 'user_id']:
                 del st.session_state[key]
         st.session_state.assessment_data = {}
         st.session_state.gaze_data = []
+        st.session_state.assessment_id = None
         st.rerun()
     
     # Main content based on current step

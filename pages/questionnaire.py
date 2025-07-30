@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+from database.models import db_manager
 
 def load_questions():
     """Load questionnaire questions from JSON file"""
@@ -162,6 +163,18 @@ def show_questionnaire_page():
     Please answer all questions honestly based on typical behavior patterns.
     """)
     
+    # Initialize assessment in database if not exists
+    if st.session_state.assessment_id is None:
+        try:
+            assessment = db_manager.create_assessment(
+                st.session_state.user_id, 
+                "questionnaire"
+            )
+            st.session_state.assessment_id = assessment.id
+        except Exception as e:
+            st.error(f"Error creating assessment: {e}")
+            return
+    
     # Load questions
     questions_data = load_questions()
     
@@ -208,6 +221,21 @@ def show_questionnaire_page():
                         score = 1 if question.get('reverse_scored', False) else 0
                     
                     st.session_state.questionnaire_responses[question_id] = score
+                    
+                    # Save response to database
+                    try:
+                        db_manager.save_questionnaire_response(
+                            st.session_state.assessment_id,
+                            question_id,
+                            question_text,
+                            score,
+                            response,
+                            section.get('domain', 'unknown'),
+                            question.get('weight', 1.0),
+                            question.get('critical_item', False)
+                        )
+                    except Exception as e:
+                        st.error(f"Error saving response: {e}")
                 
                 elif question_type == "likert":
                     response = st.select_slider(
@@ -235,7 +263,23 @@ def show_questionnaire_page():
                         score = 3 - score  # Reverse the score
                     
                     # Normalize to 0-1 scale
-                    st.session_state.questionnaire_responses[question_id] = score / 3.0
+                    normalized_score = score / 3.0
+                    st.session_state.questionnaire_responses[question_id] = normalized_score
+                    
+                    # Save response to database
+                    try:
+                        db_manager.save_questionnaire_response(
+                            st.session_state.assessment_id,
+                            question_id,
+                            question_text,
+                            normalized_score,
+                            response,
+                            section.get('domain', 'unknown'),
+                            question.get('weight', 1.0),
+                            question.get('critical_item', False)
+                        )
+                    except Exception as e:
+                        st.error(f"Error saving response: {e}")
                 
                 st.divider()
     

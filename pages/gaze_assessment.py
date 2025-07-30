@@ -6,6 +6,7 @@ import av
 import time
 import threading
 from utils.camera_utils import VideoProcessor, get_rtc_configuration, create_assessment_tasks, analyze_task_performance
+from database.models import db_manager
 
 def show_gaze_assessment_page():
     st.header("👁️ Gaze Pattern Assessment")
@@ -141,6 +142,18 @@ def show_gaze_assessment_page():
                             task_data = webrtc_ctx.video_processor.stop_task()
                             st.session_state.task_data[current_task_name] = task_data
                             st.session_state.assessment_active = False
+                            
+                            # Save gaze data to database
+                            try:
+                                db_manager.save_gaze_data_batch(
+                                    st.session_state.assessment_id,
+                                    current_task_name,
+                                    current_task['type'],
+                                    task_data
+                                )
+                            except Exception as e:
+                                st.error(f"Error saving gaze data: {e}")
+                            
                             st.success(f"Task '{current_task_name}' completed!")
                 
                 with col_next:

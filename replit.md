@@ -33,9 +33,10 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### 1. Assessment Modules
-- **Questionnaire System** (`pages/questionnaire.py`): M-CHAT-R and AQ-10 based screening questions
-- **Gaze Assessment** (`pages/gaze_assessment.py`): Computer vision-based eye tracking and gaze pattern analysis
-- **Results Dashboard** (`pages/results.py`): Comprehensive analysis with ML insights and visualizations
+- **Questionnaire System** (`pages/questionnaire.py`): M-CHAT-R and AQ-10 based screening questions with database persistence
+- **Gaze Assessment** (`pages/gaze_assessment.py`): Computer vision-based eye tracking and gaze pattern analysis with real-time data saving
+- **Results Dashboard** (`pages/results.py`): Comprehensive analysis with ML insights and visualizations, saves results to database
+- **Admin Dashboard** (`pages/admin_dashboard.py`): Database management, analytics, and system monitoring interface
 
 ### 2. Machine Learning Pipeline
 - **Behavioral Model** (`models/behavioral_model.py`): Multi-algorithm ensemble (Random Forest, Gradient Boosting, Logistic Regression)
@@ -88,16 +89,17 @@ Preferred communication style: Simple, everyday language.
 - **Joblib**: Model serialization
 
 ### Data Storage
+- **PostgreSQL Database**: Persistent storage for user data, assessment results, and analytics
 - **JSON**: Configuration files for questions and settings
-- **Session State**: In-memory storage for user data during assessment
+- **Session State**: In-memory storage for temporary user data during assessment
 - **Local Processing**: All video data processed locally for privacy
 
 ## Deployment Strategy
 
 ### Current Architecture
-- **Single-Page Application**: Streamlit-based web interface
+- **Web Application**: Streamlit-based multi-page interface with database integration
 - **Local Processing**: All video analysis happens client-side
-- **No Database**: Uses JSON files and session state for data management
+- **Database Integration**: PostgreSQL for persistent data storage and analytics
 - **Privacy-First**: No external data transmission for video processing
 
 ### Scalability Considerations
