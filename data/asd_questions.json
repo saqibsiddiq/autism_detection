@@ -1,0 +1,346 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "ASD screening questionnaire based on M-CHAT-R and AQ-10 validated tools",
+    "target_age_range": "18 months and above",
+    "administration_time": "10-15 minutes",
+    "scoring_method": "weighted_domain_scores",
+    "last_updated": "2025-01-30"
+  },
+  "sections": [
+    {
+      "name": "Early Development and Social Communication",
+      "description": "Questions about early development and social communication patterns (based on M-CHAT-R)",
+      "domain": "social_communication",
+      "weight": 1.0,
+      "questions": [
+        {
+          "id": "enjoys_being_swung",
+          "text": "Does your child enjoy being swung, bounced on your knee, etc.?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 0.8,
+          "critical_item": false,
+          "explanation": "Enjoyment of physical play and movement activities"
+        },
+        {
+          "id": "interest_in_other_children",
+          "text": "Does your child take an interest in other children?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 1.0,
+          "critical_item": true,
+          "explanation": "Social interest and awareness of peers"
+        },
+        {
+          "id": "enjoys_climbing",
+          "text": "Does your child like climbing on things, such as up stairs?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 0.6,
+          "critical_item": false,
+          "explanation": "Motor development and exploration behaviors"
+        },
+        {
+          "id": "enjoys_peek_a_boo",
+          "text": "Does your child enjoy playing peek-a-boo/hide-and-seek?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 0.9,
+          "critical_item": true,
+          "explanation": "Social play and anticipation of interaction"
+        },
+        {
+          "id": "pretend_play",
+          "text": "Does your child ever pretend, for example, to talk on the phone or take care of dolls, or pretend other things?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 1.0,
+          "critical_item": true,
+          "explanation": "Symbolic play and imagination development"
+        },
+        {
+          "id": "uses_index_finger",
+          "text": "Does your child ever use his/her index finger to point, to ask for something?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 0.8,
+          "critical_item": false,
+          "explanation": "Imperative pointing for requesting"
+        },
+        {
+          "id": "brings_objects_to_show",
+          "text": "Does your child ever bring objects over to you (parent) to show you something?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 1.0,
+          "critical_item": true,
+          "explanation": "Joint attention and sharing interests with others"
+        },
+        {
+          "id": "eye_contact",
+          "text": "Does your child look you in the eye for more than a second or two?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 1.0,
+          "critical_item": true,
+          "explanation": "Eye contact and social connection"
+        },
+        {
+          "id": "unusual_finger_movements",
+          "text": "Does your child make unusual finger movements near his/her face?",
+          "type": "yes_no",
+          "reverse_scored": true,
+          "weight": 0.9,
+          "critical_item": false,
+          "explanation": "Repetitive or stereotyped movements"
+        },
+        {
+          "id": "tries_to_attract_attention",
+          "text": "Does your child ever try to attract your attention to his/her own activity?",
+          "type": "yes_no",
+          "reverse_scored": false,
+          "weight": 0.9,
+          "critical_item": true,
+          "explanation": "Joint attention and social referencing"
+        }
+      ]
+    },
+    {
+      "name": "Social Interaction and Communication",
+      "description": "Questions about social interaction and communication preferences (based on AQ-10)",
+      "domain": "autism_traits",
+      "weight": 1.0,
+      "questions": [
+        {
+          "id": "notices_small_sounds",
+          "text": "I often notice small sounds when others do not",
+          "type": "likert",
+          "reverse_scored": true,
+          "weight": 0.7,
+          "critical_item": false,
+          "explanation": "Auditory hypersensitivity and attention to detail",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree", 
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "concentrates_on_whole_picture",
+          "text": "I usually concentrate more on the whole picture, rather than the small details",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.6,
+          "critical_item": false,
+          "explanation": "Cognitive style and attention patterns",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "easy_to_do_several_things",
+          "text": "I find it easy to do more than one thing at once",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.7,
+          "critical_item": false,
+          "explanation": "Executive functioning and multitasking abilities",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "enjoys_social_chit_chat",
+          "text": "I enjoy social chit-chat",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.9,
+          "critical_item": true,
+          "explanation": "Social communication preferences",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "finds_easy_to_read_between_lines",
+          "text": "I find it easy to 'read between the lines' when someone is talking to me",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.8,
+          "critical_item": false,
+          "explanation": "Understanding implied meaning and social context",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "knows_how_to_tell_stories",
+          "text": "I know how to tell if someone listening to me is getting bored",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.7,
+          "critical_item": false,
+          "explanation": "Social awareness and perspective-taking",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "drawn_to_people",
+          "text": "When I'm reading a story I find it difficult to work out the characters' intentions",
+          "type": "likert",
+          "reverse_scored": true,
+          "weight": 0.9,
+          "critical_item": false,
+          "explanation": "Theory of mind and understanding others' mental states",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "enjoys_social_activities",
+          "text": "I like to collect information about categories of things",
+          "type": "likert",
+          "reverse_scored": true,
+          "weight": 0.9,
+          "critical_item": false,
+          "explanation": "Special interests and systematic information gathering",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "finds_easy_to_work_out_intentions",
+          "text": "I find it easy to work out what someone is thinking or feeling just by looking at their face",
+          "type": "likert",
+          "reverse_scored": false,
+          "weight": 0.8,
+          "critical_item": true,
+          "explanation": "Facial emotion recognition and social cognition",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        },
+        {
+          "id": "good_at_social_chit_chat",
+          "text": "I find it difficult to work out people's intentions",
+          "type": "likert",
+          "reverse_scored": true,
+          "weight": 0.9,
+          "critical_item": true,
+          "explanation": "Understanding others' motivations and social intentions",
+          "options": [
+            "Definitely agree",
+            "Slightly agree",
+            "Slightly disagree",
+            "Definitely disagree"
+          ]
+        }
+      ]
+    }
+  ],
+  "scoring": {
+    "yes_no_scoring": {
+      "yes": 1,
+      "no": 0,
+      "reverse_yes": 0,
+      "reverse_no": 1
+    },
+    "likert_scoring": {
+      "definitely_agree": 3,
+      "slightly_agree": 2,
+      "slightly_disagree": 1,
+      "definitely_disagree": 0,
+      "normalization_factor": 3
+    },
+    "domain_weights": {
+      "social_communication": 1.2,
+      "autism_traits": 1.0,
+      "repetitive_behaviors": 0.8,
+      "adaptive_functioning": 0.6
+    },
+    "risk_thresholds": {
+      "low_risk": 0.3,
+      "moderate_risk": 0.6,
+      "elevated_risk": 0.8
+    }
+  },
+  "interpretation": {
+    "critical_items": {
+      "description": "Items most predictive of ASD characteristics",
+      "threshold": 3,
+      "message": "Three or more critical items indicating concerns warrant professional evaluation"
+    },
+    "domain_interpretation": {
+      "social_communication": {
+        "low": "Strong social communication skills observed",
+        "moderate": "Some challenges in social communication noted", 
+        "high": "Significant social communication concerns identified"
+      },
+      "autism_traits": {
+        "low": "Few autism-related traits observed",
+        "moderate": "Some autism-related characteristics present",
+        "high": "Multiple autism-related traits identified"
+      }
+    },
+    "overall_interpretation": {
+      "low_risk": "Results suggest typical development patterns. Continue monitoring development.",
+      "moderate_risk": "Some areas of concern identified. Consider discussing with healthcare provider.",
+      "elevated_risk": "Multiple areas of concern identified. Professional evaluation recommended."
+    }
+  },
+  "validation": {
+    "source_instruments": [
+      "M-CHAT-R (Modified Checklist for Autism in Toddlers, Revised)",
+      "AQ-10 (Autism Spectrum Quotient - 10 item version)"
+    ],
+    "target_population": "Children 18 months and older, adults",
+    "sensitivity": "High for identifying individuals who may benefit from further evaluation",
+    "specificity": "Moderate - false positives possible, professional evaluation needed",
+    "references": [
+      "Robins, D. L., et al. (2014). Validation of the M-CHAT-R",
+      "Allison, C., et al. (2012). The AQ-10: A short screening instrument"
+    ]
+  },
+  "disclaimer": {
+    "purpose": "Screening and educational tool only - not for diagnosis",
+    "limitations": [
+      "Cannot diagnose autism spectrum disorder",
+      "May produce false positives or negatives", 
+      "Cultural and linguistic factors may affect responses",
+      "Professional evaluation required for diagnosis"
+    ],
+    "recommendations": [
+      "Consult healthcare professionals for concerns",
+      "Use as part of comprehensive assessment approach",
+      "Consider individual developmental context",
+      "Seek early intervention if indicated"
+    ]
+  }
+}
