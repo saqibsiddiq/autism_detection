@@ -1,153 +1,205 @@
 import streamlit as st
 import cv2
 import numpy as np
-from streamlit_webrtc import VideoProcessorBase
-import threading
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import time
-from models.gaze_analyzer import GazeAnalyzer
 
-class VideoProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.gaze_analyzer = GazeAnalyzer()
-        self.frame_count = 0
-        self.last_analysis_time = time.time()
-        self.analysis_data = []
-        self.lock = threading.Lock()
-        
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        
-        # Process every 3rd frame for performance
-        if self.frame_count % 3 == 0:
-            gaze_data = self.gaze_analyzer.process_frame(img)
-            
-            with self.lock:
-                self.analysis_data.append(gaze_data)
-                
-            # Draw gaze visualization on frame
-            img = self._draw_gaze_visualization(img, gaze_data)
-        
-        self.frame_count += 1
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
-    
-    def _draw_gaze_visualization(self, frame, gaze_data):
-        """Draw gaze tracking visualization on frame"""
-        h, w = frame.shape[:2]
-        
-        if gaze_data['face_detected']:
-            # Draw gaze point
-            gaze_x = int(gaze_data['gaze_x'])
-            gaze_y = int(gaze_data['gaze_y'])
-            
-            # Ensure coordinates are within frame bounds
-            gaze_x = max(0, min(gaze_x, w-1))
-            gaze_y = max(0, min(gaze_y, h-1))
-            
-            # Draw gaze point
-            cv2.circle(frame, (gaze_x, gaze_y), 10, (0, 255, 0), 2)
-            
-            # Draw eye contact region
-            center_x, center_y = w // 2, h // 2
-            region_width = int(w * 0.2)
-            region_height = int(h * 0.2)
-            
-            cv2.rectangle(
-                frame,
-                (center_x - region_width//2, center_y - region_height//2),
-                (center_x + region_width//2, center_y + region_height//2),
-                (255, 255, 0), 2
-            )
-            
-            # Draw metrics
-            metrics_text = [
-                f"Eye Contact: {gaze_data['eye_contact_score']:.2f}",
-                f"Social Attention: {gaze_data['social_attention_score']:.2f}",
-                f"Fixation: {gaze_data['fixation_duration']:.0f}ms"
-            ]
-            
-            for i, text in enumerate(metrics_text):
-                cv2.putText(
-                    frame, text, (10, 30 + i * 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2
-                )
-        else:
-            # No face detected
-            cv2.putText(
-                frame, "No face detected", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2
-            )
-        
-        return frame
-    
-    def get_analysis_data(self):
-        """Get collected analysis data"""
-        with self.lock:
-            return self.analysis_data.copy()
-    
-    def reset_data(self):
-        """Reset analysis data"""
-        with self.lock:
-            self.analysis_data = []
-        self.gaze_analyzer.reset_data()
-
-def get_rtc_configuration():
-    """Get RTC configuration for WebRTC"""
-    return {
+def get_robust_rtc_configuration():
+    """Get WebRTC configuration with multiple fallback options"""
+    return RTCConfiguration({
         "iceServers": [
             {"urls": ["stun:stun.l.google.com:19302"]},
-        ]
-    }
+            {"urls": ["stun:stun1.l.google.com:19302"]},
+            {"urls": ["stun:stun2.l.google.com:19302"]},
+            {"urls": ["stun:stun.cloudflare.com:3478"]},
+            {"urls": ["stun:openrelay.metered.ca:80"]},
+            {"urls": ["stun:relay.metered.ca:80"]},
+            {"urls": ["stun:stun.ekiga.net"]}
+        ],
+        "iceTransportPolicy": "all",
+        "iceCandidatePoolSize": 10
+    })
 
-def create_assessment_tasks():
-    """Create assessment tasks for gaze analysis"""
-    tasks = [
-        {
-            "name": "Social Attention Task",
-            "description": "Look at the person in the center of the screen",
-            "duration": 10,
-            "instructions": "Please look at the face in the center of the screen when it appears.",
-            "type": "social_attention"
-        },
-        {
-            "name": "Joint Attention Task", 
-            "description": "Follow the gaze direction of the person on screen",
-            "duration": 15,
-            "instructions": "Look where the person on screen is looking.",
-            "type": "joint_attention"
-        },
-        {
-            "name": "Free Viewing Task",
-            "description": "Look naturally at the screen",
-            "duration": 10,
-            "instructions": "Look at the screen naturally, as you normally would.",
-            "type": "free_viewing"
-        }
-    ]
+def create_webrtc_streamer_with_fallback(key, video_processor_factory, **kwargs):
+    """Create WebRTC streamer with fallback options for camera issues"""
     
-    return tasks
+    # Add connection troubleshooting info
+    with st.expander("📹 Camera Connection Help", expanded=False):
+        st.markdown("""
+        **If camera connection fails:**
+        
+        1. **Allow camera permission** in your browser
+        2. **Check camera usage** - close other apps using camera
+        3. **Try different browser** (Chrome, Firefox, Safari)
+        4. **Refresh the page** and try again
+        5. **Check network connection** - stable internet required
+        
+        **Network troubleshooting:**
+        - Try connecting from different network
+        - Disable VPN if using one
+        - Check firewall settings
+        
+        **Browser permissions:**
+        - Click camera icon in address bar
+        - Allow camera access for this site
+        - Refresh page after granting permission
+        """)
+    
+    # Connection status indicator
+    connection_status = st.empty()
+    
+    try:
+        # Configure WebRTC with robust settings
+        rtc_config = get_robust_rtc_configuration()
+        
+        # Create streamer with timeout handling
+        webrtc_ctx = webrtc_streamer(
+            key=key,
+            video_processor_factory=video_processor_factory,
+            rtc_configuration=rtc_config,
+            media_stream_constraints={
+                "video": {
+                    "width": {"min": 640, "ideal": 1280, "max": 1920},
+                    "height": {"min": 480, "ideal": 720, "max": 1080},
+                    "frameRate": {"min": 15, "ideal": 30, "max": 60}
+                },
+                "audio": False
+            },
+            async_processing=True,
+            **kwargs
+        )
+        
+        # Check connection status
+        if webrtc_ctx.state.playing:
+            connection_status.success("🟢 Camera connected successfully!")
+        elif webrtc_ctx.state.signalling:
+            connection_status.info("🟡 Connecting to camera...")
+        else:
+            connection_status.warning("🔴 Camera not connected. Click 'START' to begin.")
+            
+        return webrtc_ctx
+        
+    except Exception as e:
+        connection_status.error(f"❌ Camera connection error: {str(e)}")
+        
+        # Show alternative options
+        st.error("""
+        **Camera Connection Failed**
+        
+        This can happen due to:
+        - Network firewall blocking WebRTC
+        - Browser not supporting required features
+        - Camera permission denied
+        - Multiple apps using camera
+        
+        **Quick fixes:**
+        1. Refresh the page and try again
+        2. Allow camera permission in browser
+        3. Close other camera apps
+        4. Try a different browser
+        """)
+        
+        return None
 
-def analyze_task_performance(gaze_data, task_type):
-    """Analyze performance on specific gaze tasks"""
-    if not gaze_data:
-        return {}
+def show_camera_setup_guide():
+    """Show comprehensive camera setup guide"""
+    st.markdown("""
+    ### 📹 Camera Setup Guide
     
-    analysis = {
-        'total_samples': len(gaze_data),
-        'face_detection_rate': sum([1 for d in gaze_data if d['face_detected']]) / len(gaze_data),
-        'avg_eye_contact_score': np.mean([d['eye_contact_score'] for d in gaze_data]),
-        'avg_social_attention_score': np.mean([d['social_attention_score'] for d in gaze_data]),
-        'avg_fixation_duration': np.mean([d['fixation_duration'] for d in gaze_data if d['fixation_duration'] > 0]),
-        'total_fixation_time': sum([d['fixation_duration'] for d in gaze_data]),
-        'gaze_stability': 1.0 - np.std([d['saccade_amplitude'] for d in gaze_data]) / 100.0  # Normalized stability measure
-    }
+    **Before starting the test:**
     
-    # Task-specific analysis
-    if task_type == "social_attention":
-        analysis['social_attention_performance'] = analysis['avg_eye_contact_score']
-    elif task_type == "joint_attention":
-        # For joint attention, we'd need more complex analysis of gaze following
-        analysis['joint_attention_performance'] = analysis['gaze_stability']
-    elif task_type == "free_viewing":
-        analysis['natural_gaze_pattern'] = analysis['gaze_stability']
+    1. **Position yourself properly:**
+       - Sit 18-24 inches from screen
+       - Face the camera directly
+       - Ensure good lighting on your face
     
-    return analysis
+    2. **Browser setup:**
+       - Use Chrome, Firefox, or Safari
+       - Allow camera permission when prompted
+       - Close other apps using camera
+    
+    3. **Environment:**
+       - Quiet space with minimal distractions
+       - Stable internet connection
+       - Good lighting (avoid backlighting)
+    """)
+
+def check_camera_availability():
+    """Check if camera is available and working"""
+    try:
+        # Simple camera test
+        cap = cv2.VideoCapture(0)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            cap.release()
+            return ret and frame is not None
+        return False
+    except:
+        return False
+
+def show_connection_diagnostics():
+    """Show connection diagnostics and troubleshooting"""
+    with st.expander("🔧 Connection Diagnostics", expanded=False):
+        
+        st.markdown("**System Check:**")
+        
+        # Check camera availability
+        camera_available = check_camera_availability()
+        if camera_available:
+            st.success("✅ Camera device detected")
+        else:
+            st.warning("⚠️ No camera device found or camera in use")
+        
+        # Show browser info
+        st.markdown("**Browser Compatibility:**")
+        st.info("""
+        - ✅ Chrome (recommended)
+        - ✅ Firefox
+        - ✅ Safari (macOS)
+        - ❌ Internet Explorer (not supported)
+        """)
+        
+        # Network test
+        st.markdown("**Network Requirements:**")
+        st.info("""
+        - Stable internet connection required
+        - WebRTC support needed
+        - STUN server access required
+        - No VPN blocking WebRTC traffic
+        """)
+        
+        # Manual troubleshooting steps
+        if st.button("🔄 Test Camera Access"):
+            if check_camera_availability():
+                st.success("Camera test successful! Try starting the assessment again.")
+            else:
+                st.error("Camera test failed. Please check the troubleshooting steps above.")
+
+def create_simple_camera_test():
+    """Create a simple camera test without WebRTC"""
+    st.markdown("### 📱 Simple Camera Test")
+    
+    if st.button("Test Camera", key="simple_camera_test"):
+        try:
+            cap = cv2.VideoCapture(0)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                if ret:
+                    st.success("✅ Camera is working! You can proceed with the tests.")
+                    # Show a frame
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    st.image(frame_rgb, caption="Camera Test Image", width=300)
+                else:
+                    st.error("❌ Camera found but cannot capture frames")
+                cap.release()
+            else:
+                st.error("❌ No camera device found")
+        except Exception as e:
+            st.error(f"❌ Camera test failed: {str(e)}")
+            
+        st.markdown("""
+        **If camera test works but WebRTC fails:**
+        - Browser may be blocking WebRTC
+        - Network firewall blocking connections
+        - Try different browser or network
+        """)

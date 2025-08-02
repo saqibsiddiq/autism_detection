@@ -292,9 +292,17 @@ def show_motion_tracking_test_page():
         # Instructions
         st.info("👁️ Follow the red target with your eyes as it moves around the screen. Try to keep your gaze on the target as smoothly as possible.")
         
-        # WebRTC setup
+        # WebRTC setup with multiple STUN servers
         rtc_configuration = RTCConfiguration({
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun.cloudflare.com:3478"]},
+                {"urls": ["stun:openrelay.metered.ca:80"]}
+            ],
+            "iceTransportPolicy": "all",
+            "iceCandidatePoolSize": 10
         })
         
         webrtc_ctx = webrtc_streamer(

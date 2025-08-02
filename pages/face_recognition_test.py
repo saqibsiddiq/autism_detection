@@ -9,6 +9,12 @@ import threading
 from database.models import db_manager
 import plotly.express as px
 import plotly.graph_objects as go
+from utils.camera_utils import (
+    create_webrtc_streamer_with_fallback, 
+    show_camera_setup_guide, 
+    show_connection_diagnostics,
+    create_simple_camera_test
+)
 
 class FaceRecognitionProcessor(VideoProcessorBase):
     def __init__(self):
@@ -218,19 +224,22 @@ def show_face_recognition_test_page():
     with col1:
         st.subheader("Live Video Analysis")
         
-        # WebRTC configuration
-        rtc_configuration = RTCConfiguration({
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-        })
+        # Show camera setup guide
+        show_camera_setup_guide()
         
-        # Create video processor
-        webrtc_ctx = webrtc_streamer(
+        # Show connection diagnostics
+        show_connection_diagnostics()
+        
+        # Create video processor with improved error handling
+        webrtc_ctx = create_webrtc_streamer_with_fallback(
             key="face_recognition_test",
-            video_processor_factory=FaceRecognitionProcessor,
-            rtc_configuration=rtc_configuration,
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True,
+            video_processor_factory=FaceRecognitionProcessor
         )
+        
+        # Fallback: Simple camera test if WebRTC fails
+        if webrtc_ctx is None:
+            st.warning("WebRTC connection failed. Try the simple camera test below:")
+            create_simple_camera_test()
         
         # Display current stimulus
         if st.session_state.face_test_active and st.session_state.face_test_phase < len(test_phases):

@@ -201,9 +201,17 @@ def show_social_attention_test_page():
     with col1:
         st.subheader("Social Attention Analysis")
         
-        # WebRTC setup
+        # WebRTC setup with multiple STUN servers
         rtc_configuration = RTCConfiguration({
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun.cloudflare.com:3478"]},
+                {"urls": ["stun:openrelay.metered.ca:80"]}
+            ],
+            "iceTransportPolicy": "all",
+            "iceCandidatePoolSize": 10
         })
         
         webrtc_ctx = webrtc_streamer(
