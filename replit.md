@@ -2,7 +2,7 @@
 
 ## Overview
 
-This application is an educational and screening support platform for Autism Spectrum Disorder (ASD) behavioral analysis. It combines traditional questionnaire-based assessments with computer vision-based gaze pattern analysis to provide comprehensive behavioral insights. The platform uses Streamlit for the web interface, MediaPipe for facial landmark detection, and machine learning models for pattern analysis.
+This application is an advanced behavioral analysis platform for Autism Spectrum Disorder (ASD) detection using computer vision and gaze pattern analysis. The platform focuses on visual stimuli-based assessments including face recognition, social attention, visual pattern processing, and motion tracking tests. It uses real-time eye tracking through MediaPipe for facial landmark detection and provides comprehensive behavioral insights through AI-powered analysis.
 
 **Important Note**: This is an educational tool only and is not intended for medical diagnosis. All results must be interpreted by qualified healthcare professionals.
 
@@ -33,9 +33,11 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### 1. Assessment Modules
-- **Questionnaire System** (`pages/questionnaire.py`): M-CHAT-R and AQ-10 based screening questions with database persistence
-- **Gaze Assessment** (`pages/gaze_assessment.py`): Computer vision-based eye tracking and gaze pattern analysis with real-time data saving
-- **Results Dashboard** (`pages/results.py`): Comprehensive analysis with ML insights and visualizations, saves results to database
+- **Face Recognition Test** (`pages/face_recognition_test.py`): Measures gaze patterns when viewing human faces vs objects, analyzes social orientation
+- **Social Attention Test** (`pages/social_attention_test.py`): Evaluates attention to social vs non-social stimuli across multiple scenarios
+- **Visual Pattern Test** (`pages/visual_pattern_test.py`): Assesses preference for patterns and repetitive visual elements vs random stimuli
+- **Motion Tracking Test** (`pages/motion_tracking_test.py`): Analyzes eye movement tracking ability and smooth pursuit patterns
+- **Results Analysis** (`pages/results_analysis.py`): Comprehensive behavioral analysis with risk assessment and clinical interpretation
 - **Admin Dashboard** (`pages/admin_dashboard.py`): Database management, analytics, and system monitoring interface
 
 ### 2. Machine Learning Pipeline

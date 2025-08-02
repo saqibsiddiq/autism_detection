@@ -9,6 +9,7 @@ import mediapipe as mp
 import json
 import os
 import uuid
+import time
 from datetime import datetime
 from database.models import db_manager
 
@@ -26,181 +27,166 @@ try:
 except Exception as e:
     st.error(f"Database initialization error: {e}")
 
-# Initialize session state and database user
+# Initialize session state
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
-
 if 'user_id' not in st.session_state:
-    # Try to get existing user or create new one
     user = db_manager.get_user_by_session(st.session_state.session_id)
     if not user:
         user = db_manager.create_user(st.session_state.session_id)
     st.session_state.user_id = user.id
-
 if 'assessment_id' not in st.session_state:
     st.session_state.assessment_id = None
-if 'assessment_data' not in st.session_state:
-    st.session_state.assessment_data = {}
-if 'gaze_data' not in st.session_state:
-    st.session_state.gaze_data = []
-if 'current_step' not in st.session_state:
-    st.session_state.current_step = 0
+if 'current_test' not in st.session_state:
+    st.session_state.current_test = 0
+if 'test_results' not in st.session_state:
+    st.session_state.test_results = {}
 
 def main():
+    # Title and description
     st.title("🧠 ASD Behavioral Analysis Platform")
+    st.markdown("""
+    ### Advanced Gaze Pattern Analysis for Autism Spectrum Disorder Detection
     
-    # Medical disclaimer
-    with st.expander("⚠️ Important Medical Disclaimer - Please Read", expanded=False):
-        st.warning("""
-        **MEDICAL DISCLAIMER:**
-        
-        This application is designed for educational and screening support purposes only. It is NOT a diagnostic tool and should never be used as a substitute for professional medical advice, diagnosis, or treatment.
-        
-        - Results from this application do not constitute a medical diagnosis
-        - Always consult with qualified healthcare professionals for proper evaluation
-        - This tool may produce false positives or false negatives
-        - Early intervention and professional assessment are crucial for autism spectrum disorders
-        
-        By using this application, you acknowledge that you understand these limitations and will seek appropriate professional medical advice.
-        """)
+    This platform uses computer vision and behavioral analysis to assess concentration levels 
+    and detect autism-related behavioral patterns through visual stimuli and gaze tracking.
     
-    # Privacy notice
-    with st.expander("🔒 Privacy Notice", expanded=False):
-        st.info("""
-        **Your Privacy is Our Priority:**
-        
-        - All video processing happens locally on your device
-        - No video data is transmitted or stored on external servers
-        - Assessment data is only stored temporarily in your browser session
-        - You can clear all data at any time using the sidebar options
-        """)
+    **⚠️ Important Medical Disclaimer:**
+    This is an educational tool only and not intended for medical diagnosis. 
+    All results must be interpreted by qualified healthcare professionals.
+    """)
     
-    # Navigation
-    st.sidebar.title("Navigation")
+    # Sidebar navigation
+    st.sidebar.title("🎯 Assessment Tests")
     
-    # Assessment progress
-    steps = ["Overview", "Questionnaire", "Gaze Assessment", "Results", "Educational Resources"]
-    current_step = st.sidebar.selectbox("Assessment Steps", steps, index=st.session_state.current_step)
+    test_options = [
+        "🏠 Overview",
+        "👁️ Face Recognition Test", 
+        "🎭 Social Attention Test",
+        "🎨 Visual Pattern Test",
+        "🎬 Motion Tracking Test",
+        "📊 Results & Analysis",
+        "📈 Admin Dashboard"
+    ]
     
-    # Admin access
-    if st.sidebar.checkbox("Admin Dashboard"):
+    selected_test = st.sidebar.selectbox("Select Test", test_options, index=st.session_state.current_test)
+    st.session_state.current_test = test_options.index(selected_test)
+    
+    # Display selected page
+    if selected_test == "🏠 Overview":
+        show_overview()
+    elif selected_test == "👁️ Face Recognition Test":
+        show_face_recognition_test()
+    elif selected_test == "🎭 Social Attention Test":
+        show_social_attention_test()
+    elif selected_test == "🎨 Visual Pattern Test":
+        show_visual_pattern_test()
+    elif selected_test == "🎬 Motion Tracking Test":
+        show_motion_tracking_test()
+    elif selected_test == "📊 Results & Analysis":
+        show_results_analysis()
+    elif selected_test == "📈 Admin Dashboard":
         from pages.admin_dashboard import show_admin_dashboard
         show_admin_dashboard()
-        return
-    
-    # Update current step
-    st.session_state.current_step = steps.index(current_step)
-    
-    # Progress bar
-    progress = (st.session_state.current_step + 1) / len(steps)
-    st.sidebar.progress(progress)
-    st.sidebar.write(f"Progress: {int(progress * 100)}%")
-    
-    # Database statistics
-    if st.sidebar.checkbox("Show Statistics"):
-        try:
-            stats = db_manager.get_assessment_statistics()
-            st.sidebar.metric("Total Users", stats.get("total_users", 0))
-            st.sidebar.metric("Completed Assessments", stats.get("completed_assessments", 0))
-            if stats.get("completion_rate"):
-                st.sidebar.metric("Completion Rate", f"{stats['completion_rate']:.1%}")
-        except Exception as e:
-            st.sidebar.error("Could not load statistics")
-    
-    # Clear data option
-    if st.sidebar.button("🗑️ Clear Session Data"):
-        # Clear session state but keep user in database
-        for key in list(st.session_state.keys()):
-            if key not in ['current_step', 'session_id', 'user_id']:
-                del st.session_state[key]
-        st.session_state.assessment_data = {}
-        st.session_state.gaze_data = []
-        st.session_state.assessment_id = None
-        st.rerun()
-    
-    # Main content based on current step
-    if current_step == "Overview":
-        show_overview()
-    elif current_step == "Questionnaire":
-        show_questionnaire()
-    elif current_step == "Gaze Assessment":
-        show_gaze_assessment()
-    elif current_step == "Results":
-        show_results()
-    elif current_step == "Educational Resources":
-        show_education()
 
 def show_overview():
-    st.header("Welcome to the ASD Behavioral Analysis Platform")
+    st.header("🎯 Assessment Overview")
     
-    col1, col2 = st.columns([2, 1])
+    # Test descriptions
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("""
-        ### About This Assessment
+        st.subheader("Available Tests")
         
-        This comprehensive assessment combines traditional behavioral questionnaires with advanced gaze pattern analysis to provide insights into autism spectrum disorder (ASD) characteristics.
+        tests_info = [
+            {
+                "name": "👁️ Face Recognition Test",
+                "description": "Measures gaze patterns when viewing human faces vs objects",
+                "duration": "3-5 minutes",
+                "key_metrics": "Eye contact duration, face preference ratio"
+            },
+            {
+                "name": "🎭 Social Attention Test", 
+                "description": "Analyzes attention to social vs non-social stimuli",
+                "duration": "4-6 minutes",
+                "key_metrics": "Social attention score, gaze distribution"
+            },
+            {
+                "name": "🎨 Visual Pattern Test",
+                "description": "Evaluates preference for patterns and repetitive visuals",
+                "duration": "3-4 minutes", 
+                "key_metrics": "Pattern fixation, visual scanning behavior"
+            },
+            {
+                "name": "🎬 Motion Tracking Test",
+                "description": "Tracks eye movements following moving objects",
+                "duration": "2-3 minutes",
+                "key_metrics": "Smooth pursuit, saccadic movements"
+            }
+        ]
         
-        **The assessment includes:**
-        
-        1. **Behavioral Questionnaire** - Based on validated screening tools including M-CHAT-R and AQ-10
-        2. **Gaze Pattern Analysis** - Real-time eye tracking during social attention tasks
-        3. **Comprehensive Results** - Combined analysis of behavioral and gaze data
-        4. **Educational Resources** - Information about ASD and early intervention
-        
-        ### What You'll Need
-        
-        - A device with a camera (webcam or mobile camera)
-        - Good lighting for optimal face detection
-        - Approximately 15-20 minutes to complete
-        - A quiet environment for the assessment
-        """)
-        
-        if st.button("🚀 Start Assessment", type="primary", use_container_width=True):
-            st.session_state.current_step = 1
-            st.rerun()
+        for test in tests_info:
+            with st.expander(test["name"], expanded=False):
+                st.write(f"**Description:** {test['description']}")
+                st.write(f"**Duration:** {test['duration']}")
+                st.write(f"**Key Metrics:** {test['key_metrics']}")
     
     with col2:
+        st.subheader("Getting Started")
+        
         st.markdown("""
-        ### Key Features
+        ### 📋 Before You Begin:
         
-        ✅ **Evidence-Based**
-        - Validated questionnaires
-        - Research-backed gaze metrics
+        1. **Camera Setup**: Ensure your camera is working and positioned at eye level
+        2. **Lighting**: Good lighting on your face for accurate tracking
+        3. **Distance**: Sit 18-24 inches from the screen
+        4. **Environment**: Quiet space with minimal distractions
         
-        ✅ **Privacy-First**
-        - Local video processing
-        - No data transmission
+        ### 🔬 How It Works:
         
-        ✅ **Comprehensive**
-        - Multiple assessment modalities
-        - Detailed visualizations
+        - **Face Detection**: Uses MediaPipe for precise facial landmark detection
+        - **Gaze Tracking**: Analyzes eye movements and fixation patterns
+        - **Behavioral Analysis**: AI models assess concentration and attention patterns
+        - **Real-time Processing**: All analysis happens locally on your device
         
-        ✅ **Accessible**
-        - Mobile-friendly design
-        - Clear instructions
+        ### 📊 What You'll Get:
+        
+        - Detailed gaze pattern analysis
+        - Concentration level assessment
+        - Behavioral pattern insights
+        - Comprehensive report with visualizations
         """)
         
-        st.info("""
-        **Target Age Range:**
-        This assessment is designed for individuals aged 18 months and above. For younger children, parental assistance may be needed.
-        """)
+        # Start assessment button
+        st.markdown("---")
+        if st.button("🚀 Start Behavioral Assessment", type="primary", use_container_width=True):
+            # Create new assessment
+            if not st.session_state.assessment_id:
+                assessment = db_manager.create_assessment(st.session_state.user_id, "behavioral_analysis")
+                st.session_state.assessment_id = assessment.id
+            
+            st.session_state.current_test = 1  # Go to first test
+            st.rerun()
 
-def show_questionnaire():
-    from pages.questionnaire import show_questionnaire_page
-    show_questionnaire_page()
+def show_face_recognition_test():
+    from pages.face_recognition_test import show_face_recognition_test_page
+    show_face_recognition_test_page()
 
-def show_gaze_assessment():
-    from pages.gaze_assessment import show_gaze_assessment_page
-    show_gaze_assessment_page()
+def show_social_attention_test():
+    from pages.social_attention_test import show_social_attention_test_page
+    show_social_attention_test_page()
 
-def show_results():
-    from pages.results import show_results_page
-    show_results_page()
+def show_visual_pattern_test():
+    from pages.visual_pattern_test import show_visual_pattern_test_page
+    show_visual_pattern_test_page()
 
-def show_education():
-    from pages.education import show_education_page
-    show_education_page()
+def show_motion_tracking_test():
+    from pages.motion_tracking_test import show_motion_tracking_test_page
+    show_motion_tracking_test_page()
+
+def show_results_analysis():
+    from pages.results_analysis import show_results_analysis_page
+    show_results_analysis_page()
 
 if __name__ == "__main__":
     main()

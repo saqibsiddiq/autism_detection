@@ -141,7 +141,8 @@ class BehavioralModel:
             
             # Add some noise and individual variation
             for key in sample:
-                sample[key] += np.random.normal(0, sample[key] * 0.1)  # 10% noise
+                if sample[key] > 0:
+                    sample[key] += np.random.normal(0, abs(sample[key]) * 0.1)  # 10% noise
                 
             data.append(sample)
             labels.append(is_asd)
