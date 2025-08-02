@@ -169,8 +169,24 @@ def show_overview():
             st.rerun()
 
 def show_face_recognition_test():
-    from pages.face_recognition_test import show_face_recognition_test_page
-    show_face_recognition_test_page()
+    # Check if camera is available, use demo mode if not
+    try:
+        import cv2
+        cap = cv2.VideoCapture(0)
+        camera_available = cap.isOpened()
+        if camera_available:
+            ret, frame = cap.read()
+            camera_available = ret and frame is not None
+        cap.release()
+    except:
+        camera_available = False
+    
+    if camera_available:
+        from pages.face_recognition_test import show_face_recognition_test_page
+        show_face_recognition_test_page()
+    else:
+        from pages.demo_face_test import show_demo_face_recognition_test
+        show_demo_face_recognition_test()
 
 def show_social_attention_test():
     from pages.social_attention_test import show_social_attention_test_page
