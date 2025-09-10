@@ -19,7 +19,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      - ./asddb.sqlite3:/app/asddb.sqlite3
+      - ./data:/app/data
     ports:
       - "8501:8501"
 

@@ -45,7 +45,7 @@ streamlit run app.py
 
 Notes:
 - Frontend proxy forwards `/api/*` to `http://localhost:5001`.
-- DB: `asddb.sqlite3` at repo root. Safe to delete to reset state.
+- DB path defaults to `data/asddb.sqlite3`. Set `DATABASE_URL` to use Postgres or a different SQLite path.
 
 ## 🧩 Features
 - Real‑time webcam preview and future MediaPipe gaze analysis (React)
@@ -63,7 +63,8 @@ CI: ![CI](https://github.com/saqibsiddiq/autism_detection/actions/workflows/ci.y
 1. Create new Web Service → connect this repo
 2. Runtime: Python 3.12; Build Command: `pip install -r requirements.txt`
 3. Start Command: `streamlit run app.py --server.port $PORT --server.headless true`
-4. Add disk if you want to persist `asddb.sqlite3` (or use a Postgres DB and set `DATABASE_URL`)
+4. For persistence: add a Disk mounted at `/opt/data` and set `DATABASE_URL=sqlite:////opt/data/asddb.sqlite3`
+   - Or use managed Postgres and set `DATABASE_URL=postgresql+psycopg2://USER:PASSWORD@HOST:PORT/DBNAME`
 
 ### Streamlit Community Cloud
 1. New app → select repo and `app.py`

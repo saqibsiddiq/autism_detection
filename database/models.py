@@ -79,12 +79,26 @@ class DatabaseManager:
     def __init__(self):
         self.database_url = os.getenv("DATABASE_URL")
         if not self.database_url:
-            # Fallback to local SQLite in project root
+            # Fallback to local SQLite in data/ directory to avoid repo root
             project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-            sqlite_path = os.path.join(project_root, "asddb.sqlite3")
+            data_dir = os.path.join(project_root, "data")
+            os.makedirs(data_dir, exist_ok=True)
+            sqlite_path = os.path.join(data_dir, "asddb.sqlite3")
             self.database_url = f"sqlite:///{sqlite_path}"
             os.environ["DATABASE_URL"] = self.database_url
-        
+
+        # If using SQLite, ensure the target directory exists (helps on Render disk mounts)
+        if self.database_url.startswith("sqlite"):
+            # sqlite:///relative or sqlite:////absolute
+            path_part = self.database_url.split("sqlite:///")[-1]
+            if path_part:
+                target_dir = os.path.dirname(path_part)
+                if target_dir and not os.path.isabs(target_dir):
+                    # Make relative to project root
+                    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+                    target_dir = os.path.join(project_root, target_dir)
+                os.makedirs(target_dir, exist_ok=True)
+
         connect_args = {"check_same_thread": False} if self.database_url.startswith("sqlite") else {}
         self.engine = create_engine(self.database_url, connect_args=connect_args, future=True)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
