@@ -2,11 +2,11 @@ services:
   - type: web
     name: autism-detect
     env: python
-    pythonVersion: 3.11.9
+    pythonVersion: 3.10.14
     buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt && python -V
     startCommand: streamlit run app.py --server.port $PORT --server.headless true
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.10
       - key: DATABASE_URL
         value: sqlite:////tmp/asddb.sqlite3
