@@ -57,6 +57,8 @@ We provide Dockerfiles and `docker-compose.yml`. If `docker compose` isn’t ins
 
 ## ☁️ Deploy Streamlit (Render/Heroku/Streamlit Cloud)
 
+CI: ![CI](https://github.com/saqibsiddiq/autism_detection/actions/workflows/ci.yml/badge.svg)
+
 ### Render (recommended)
 1. Create new Web Service → connect this repo
 2. Runtime: Python 3.12; Build Command: `pip install -r requirements.txt`
