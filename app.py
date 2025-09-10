@@ -21,6 +21,28 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Global CSS for a polished look
+def inject_global_styles():
+    st.markdown(
+        """
+        <style>
+        /* Layout tweaks */
+        .block-container {padding-top: 2rem; padding-bottom: 2rem;}
+        /* Card-like containers */
+        .stMarkdown h3 {margin-top: 0.6rem;}
+        .metric-row {display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;}
+        .metric-card {background: var(--secondary-background-color); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;}
+        /* Buttons */
+        .stButton>button {border-radius: 10px !important; font-weight: 600;}
+        /* Expander headers */
+        .streamlit-expanderHeader {font-weight: 700;}
+        /* Sidebar */
+        section[aria-label="sidebar"] .stMarkdown h1, section[aria-label="sidebar"] .stMarkdown h2 {margin-bottom: 0.5rem;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # Initialize database
 try:
     db_manager.create_tables()
@@ -43,6 +65,7 @@ if 'test_results' not in st.session_state:
     st.session_state.test_results = {}
 
 def main():
+    inject_global_styles()
     # Title and description
     st.title("🧠 ASD Behavioral Analysis Platform")
     st.markdown("""

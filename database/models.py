@@ -79,9 +79,14 @@ class DatabaseManager:
     def __init__(self):
         self.database_url = os.getenv("DATABASE_URL")
         if not self.database_url:
-            raise ValueError("DATABASE_URL environment variable not set")
+            # Fallback to local SQLite in project root
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+            sqlite_path = os.path.join(project_root, "asddb.sqlite3")
+            self.database_url = f"sqlite:///{sqlite_path}"
+            os.environ["DATABASE_URL"] = self.database_url
         
-        self.engine = create_engine(self.database_url)
+        connect_args = {"check_same_thread": False} if self.database_url.startswith("sqlite") else {}
+        self.engine = create_engine(self.database_url, connect_args=connect_args, future=True)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         
     def create_tables(self):
@@ -155,10 +160,37 @@ class DatabaseManager:
             db.close()
     
     def save_gaze_data_batch(self, assessment_id: int, task_name: str, task_type: str, 
-                           gaze_data_list: list):
-        """Save a batch of gaze data points"""
+                           gaze_data_list):
+        """Save gaze data. Accepts a list of raw gaze dicts or a single aggregate dict."""
         db = self.get_session()
         try:
+            # If an aggregate dict was provided, store a single summary row
+            if isinstance(gaze_data_list, dict):
+                summary = gaze_data_list
+                gaze_record = GazeData(
+                    assessment_id=assessment_id,
+                    task_name=task_name,
+                    task_type=task_type,
+                    frame_number=summary.get('total_frames') or summary.get('frame_count') or 0,
+                    timestamp=summary.get('timestamp', 0),
+                    face_detected=bool(summary.get('face_detected_frames', 0) > 0),
+                    gaze_x=summary.get('avg_gaze_x', 0),
+                    gaze_y=summary.get('avg_gaze_y', 0),
+                    eye_contact_score=summary.get('face_detection_rate', 0),
+                    fixation_duration=summary.get('avg_fixation_duration', 0),
+                    saccade_amplitude=summary.get('gaze_velocity_std', 0),
+                    social_attention_score=(
+                        summary.get('social_attention_score')
+                        or summary.get('social_attention_ratio')
+                        or summary.get('face_preference_ratio')
+                        or 0
+                    )
+                )
+                db.add(gaze_record)
+                db.commit()
+                return 1
+            
+            # Otherwise treat as iterable of raw gaze datapoints
             gaze_records = []
             for i, data_point in enumerate(gaze_data_list):
                 gaze_record = GazeData(
@@ -177,28 +209,39 @@ class DatabaseManager:
                 )
                 gaze_records.append(gaze_record)
             
-            db.add_all(gaze_records)
-            db.commit()
+            if gaze_records:
+                db.add_all(gaze_records)
+                db.commit()
             return len(gaze_records)
         finally:
             db.close()
     
-    def save_assessment_results(self, assessment_id: int, questionnaire_scores: dict,
-                              gaze_metrics: dict, ml_prediction: dict,
-                              risk_assessment: dict, recommendations: list):
-        """Save final assessment results"""
+    def save_assessment_results(self, assessment_id: int, overall_scores: dict,
+                              behavioral_patterns: dict, meta: dict,
+                              risk_indicators: dict, recommendations: list):
+        """Save final assessment results from comprehensive analysis."""
         db = self.get_session()
         try:
+            # Derive summary scoring
+            overall_score_value = 0.0
+            if overall_scores:
+                try:
+                    overall_score_value = float(sum(overall_scores.values())) / max(len(overall_scores), 1)
+                except Exception:
+                    overall_score_value = 0.0
+            risk_level_value = (meta or {}).get('overall_risk_level', 'unknown')
+            confidence_value = float((meta or {}).get('confidence_level', 0))
+            
             result = AssessmentResult(
                 assessment_id=assessment_id,
-                questionnaire_scores=questionnaire_scores,
-                gaze_metrics=gaze_metrics,
-                ml_prediction=ml_prediction,
-                risk_assessment=risk_assessment,
+                questionnaire_scores={},
+                gaze_metrics=behavioral_patterns or {},
+                ml_prediction=meta or {},
+                risk_assessment=risk_indicators or {},
                 recommendations=recommendations,
-                overall_score=ml_prediction.get('probability_asd_indicators', 0),
-                risk_level=risk_assessment.get('risk_level', 'unknown'),
-                confidence_score=ml_prediction.get('confidence', 0)
+                overall_score=overall_score_value,
+                risk_level=risk_level_value,
+                confidence_score=confidence_value
             )
             db.add(result)
             db.commit()

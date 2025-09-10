@@ -1,10 +1,11 @@
 import streamlit as st
 import cv2
 import numpy as np
+import av
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import time
 
-def get_robust_rtc_configuration():
+def get_rtc_configuration():
     """Get WebRTC configuration with multiple fallback options"""
     return RTCConfiguration({
         "iceServers": [
@@ -50,7 +51,7 @@ def create_webrtc_streamer_with_fallback(key, video_processor_factory, **kwargs)
     
     try:
         # Configure WebRTC with robust settings
-        rtc_config = get_robust_rtc_configuration()
+        rtc_config = get_rtc_configuration()
         
         # Create streamer with timeout handling
         webrtc_ctx = webrtc_streamer(
@@ -203,3 +204,11 @@ def create_simple_camera_test():
         - Network firewall blocking connections
         - Try different browser or network
         """)
+
+class VideoProcessor(VideoProcessorBase):
+    def recv(self, frame):
+        # Convert frame to numpy array
+        img = frame.to_ndarray(format="bgr24")
+        # (Optional) Process the image here
+        # For now, just return the frame as-is
+        return av.VideoFrame.from_ndarray(img, format="bgr24")

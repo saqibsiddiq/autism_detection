@@ -1,0 +1,24 @@
+[theme]
+base = "light"
+primaryColor = "#2563EB"      # Indigo-600
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F4F6"  # Gray-100
+textColor = "#111827"          # Gray-900
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+runOnSave = true
+headless = true
+maxUploadSize = 200
+enableXsrfProtection = true
+ port = 8501
+
+[client]
+tooltips = true
+
+[logger]
+level = "info"
+
