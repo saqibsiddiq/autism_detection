@@ -61,7 +61,7 @@ CI: ![CI](https://github.com/saqibsiddiq/autism_detection/actions/workflows/ci.y
 
 ### Render (recommended)
 1. Create new Web Service → connect this repo
-2. Runtime: Python 3.12; Build Command: `pip install -r requirements.txt`
+2. Runtime: Python 3.11 (pinned via `render.yaml` and `runtime.txt`); Build Command: `pip install -r requirements.txt`
 3. Start Command: `streamlit run app.py --server.port $PORT --server.headless true`
    - If Render defaults to Python 3.13, add `runtime.txt` with `python-3.11` (in repo) or set the environment to 3.11 in service settings.
 4. For persistence: add a Disk mounted at `/opt/data` and set `DATABASE_URL=sqlite:////opt/data/asddb.sqlite3`
