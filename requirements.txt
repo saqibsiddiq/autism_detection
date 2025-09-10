@@ -2,7 +2,7 @@ av>=14.4.0
 plotly>=6.2.0
 streamlit-webrtc>=0.63.3
 streamlit>=1.47.1
-mediapipe==0.9.1.0
+mediapipe==0.10.14
 scikit-learn>=1.7.1
 joblib>=1.5.1
 pandas>=2.3.1
